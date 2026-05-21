@@ -97,6 +97,42 @@
   .task-check { width:18px; height:18px; border:1.5px solid var(--border2); border-radius:5px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; transition:all 0.15s; background:transparent; color:transparent; font-size:11px; }
   .task-check:hover { border-color:var(--accent); }
   .task-card.done .task-check { background:var(--accent); border-color:var(--accent); color:#0e0f12; }
+  /* ── TASK TIMER ─────────────────────────── */
+  .timer-btn {
+    width:22px; height:22px; border-radius:50%;
+    border:1.5px solid var(--border2);
+    background:transparent; color:var(--text3);
+    cursor:pointer; font-size:10px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; margin-top:1px;
+    transition:all 0.15s;
+  }
+  .timer-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .timer-btn.running {
+    border-color:var(--accent); color:var(--accent);
+    background:rgba(74,157,111,0.12);
+    animation:tpulse 1.5s infinite;
+  }
+  @keyframes tpulse { 0%,100%{box-shadow:0 0 0 0 rgba(74,157,111,0.4)} 50%{box-shadow:0 0 0 4px rgba(74,157,111,0)} }
+  .task-check-area {
+    display:flex; flex-direction:column; align-items:center;
+    gap:5px; flex-shrink:0;
+  }
+  .timer-display {
+    font-size:9px; font-family:var(--mono);
+    color:var(--accent); letter-spacing:0.04em;
+    white-space:nowrap; min-width:32px; text-align:center;
+    display:none;
+  }
+  .timer-display.visible { display:block; }
+  .task-card.done .timer-btn { opacity:0.3; pointer-events:none; }
+  .badge-time {
+    background:rgba(74,157,111,0.1); color:var(--accent);
+    border:1px solid rgba(74,157,111,0.25);
+    font-size:10px; font-family:var(--mono);
+    padding:2px 8px; border-radius:4px; letter-spacing:0.04em;
+  }
+
 
   .task-title { font-size:13px; font-weight:500; color:var(--text); margin-bottom:5px; line-height:1.4; }
   .task-desc { font-size:12px; color:var(--text2); line-height:1.5; margin-bottom:8px; }
@@ -681,6 +717,70 @@
 const PRIO_LABEL = { 1:'1 — Urgente + Importante', 2:'2 — Importante + No urgente', 3:'3 — Urgente + No importante', 4:'4 — Ni urgente ni importante' };
 const PRIO_CLASS = { 1:'p1', 2:'p2', 3:'p3', 4:'p4' };
 
+// ── CRONÓMETRO — declaraciones tempranas (usadas en makeCard) ────
+const activeTimers = {};
+let _timerTick = null;
+
+function fmtTime(secs) {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function toggleTimer(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t || t.done) return;
+  if (activeTimers[id] !== undefined) {
+    const elapsed = Math.floor((Date.now() - activeTimers[id]) / 1000);
+    t.timerTotal = (t.timerTotal || 0) + elapsed;
+    delete activeTimers[id];
+    if (Object.keys(activeTimers).length === 0) stopTick();
+    save(); renderAll();
+  } else {
+    activeTimers[id] = Date.now();
+    startTick();
+    const btn  = document.getElementById('tbtn-' + id);
+    const disp = document.getElementById('tdisp-' + id);
+    if (btn)  { btn.classList.add('running'); btn.title = 'Pausar cronómetro'; btn.textContent = '⏸'; }
+    if (disp) { disp.classList.add('visible'); }
+  }
+}
+
+function startTick() {
+  if (_timerTick) return;
+  _timerTick = setInterval(tickTimers, 1000);
+}
+
+function stopTick() {
+  if (_timerTick) { clearInterval(_timerTick); _timerTick = null; }
+}
+
+function tickTimers() {
+  const now = Date.now();
+  Object.entries(activeTimers).forEach(([id, start]) => {
+    const total   = (tasks.find(t => t.id == id)?.timerTotal || 0);
+    const current = Math.floor((now - start) / 1000);
+    const disp = document.getElementById('tdisp-' + id);
+    if (disp) disp.textContent = fmtTime(total + current);
+  });
+}
+
+window.addEventListener('beforeunload', () => {
+  const now = Date.now();
+  let changed = false;
+  Object.entries(activeTimers).forEach(([id, start]) => {
+    const t = tasks.find(t => t.id == id);
+    if (t) {
+      t.timerTotal = (t.timerTotal || 0) + Math.floor((now - start) / 1000);
+      delete activeTimers[id];
+      changed = true;
+    }
+  });
+  if (changed) localStorage.setItem('ct_tasks', JSON.stringify(tasks));
+});
+
 let tasks = JSON.parse(localStorage.getItem('ct_tasks') || '[]');
 let history = JSON.parse(localStorage.getItem('ct_history') || '[]');
 let selectedPrio = null;
@@ -880,8 +980,19 @@ function makeCard(t, fromBacklog = false) {
     ? `<div class="task-note-preview">${escHtml(t.nota.length > 120 ? t.nota.slice(0,120)+'…' : t.nota)}</div>`
     : '';
 
+  const elapsed   = t.timerTotal || 0;
+  const isRunning  = activeTimers[t.id] !== undefined;
+  const timeLabel  = elapsed > 0 ? fmtTime(elapsed) : '';
+
   card.innerHTML = `
-    <div class="task-check" onclick="toggleDone(${t.id})">✓</div>
+    <div class="task-check-area">
+      <div class="task-check" onclick="toggleDone(${t.id})">✓</div>
+      <button class="timer-btn ${isRunning ? 'running' : ''}"
+              id="tbtn-${t.id}"
+              onclick="toggleTimer(${t.id})"
+              title="${isRunning ? 'Pausar cronómetro' : 'Iniciar cronómetro'}">▶</button>
+      <div class="timer-display ${isRunning || elapsed > 0 ? 'visible' : ''}" id="tdisp-${t.id}">${isRunning ? fmtTime(elapsed + Math.floor((Date.now() - activeTimers[t.id]) / 1000)) : timeLabel}</div>
+    </div>
     <div class="task-body">
       <div class="task-title">${escHtml(t.titulo)}</div>
       ${t.desc ? `<div class="task-desc">${escHtml(t.desc)}</div>` : ''}
@@ -891,6 +1002,7 @@ function makeCard(t, fromBacklog = false) {
         ${t.cat ? `<span class="badge badge-cat">${escHtml(t.cat)}</span>` : ''}
         ${t.fecha ? `<span class="badge badge-date">${t.fecha}</span>` : ''}
         ${t.nota ? `<span class="badge badge-nota" onclick="openEditPanel(${t.id})">📝 nota</span>` : ''}
+        ${elapsed > 0 && !isRunning ? `<span class="badge badge-time">⏱ ${fmtTime(elapsed)}</span>` : ''}
       </div>
       ${notaPreview}
     </div>
@@ -987,6 +1099,7 @@ function toast(msg) {
 }
 
 renderAll();
+
 
 // ── BACKUP & IMPORT ──────────────────────────────────────────────
 
