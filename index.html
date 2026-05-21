@@ -209,6 +209,42 @@
   .import-preview { background:var(--bg3); border-radius:var(--r); padding:10px 12px; font-size:11px; font-family:var(--mono); color:var(--text2); line-height:1.7; }
 
   /* HEADER backup btn */
+  /* SYNC STATUS */
+  .sync-bar { display:flex; align-items:center; gap:8px; padding:5px 12px; background:var(--bg3); border:1px solid var(--border); border-radius:var(--r); font-size:11px; font-family:var(--mono); color:var(--text2); }
+  .sync-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; transition:background 0.3s; }
+  .sync-dot.ok    { background:var(--green); box-shadow:0 0 5px var(--green); }
+  .sync-dot.err   { background:var(--red); }
+  .sync-dot.busy  { background:var(--accent); animation:sblink 0.8s infinite; }
+  .sync-dot.off   { background:var(--text3); }
+  @keyframes sblink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  .sync-lbl { color:var(--text); }
+  .sync-time { color:var(--text3); font-size:10px; }
+  .sync-manual-btn { background:none; border:none; color:var(--text3); cursor:pointer; font-size:13px; padding:0 2px; transition:color .15s; line-height:1; }
+  .sync-manual-btn:hover { color:var(--accent); }
+
+  /* GOOGLE CONFIG BTN */
+  .hdr-google-btn { background:var(--bg3); border:1px solid var(--border); border-radius:var(--r); padding:6px 14px; font-size:12px; font-family:var(--mono); color:var(--text2); cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:7px; white-space:nowrap; }
+  .hdr-google-btn:hover { border-color:var(--border2); color:var(--text); }
+  .hdr-google-btn.connected { border-color:rgba(91,166,104,0.5); color:var(--green); }
+
+  /* GOOGLE CONFIG MODAL */
+  .gstep { display:flex; gap:12px; align-items:flex-start; }
+  .gstep-num { width:22px; height:22px; border-radius:50%; background:var(--accent); color:#0e0f12; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; font-family:var(--mono); }
+  .gstep-body b { font-size:12px; color:var(--text); display:block; margin-bottom:3px; }
+  .gstep-body p { font-size:11px; color:var(--text2); line-height:1.6; }
+  .gstep-body code { font-family:var(--mono); font-size:10px; background:var(--bg3); padding:2px 6px; border-radius:4px; color:var(--accent); }
+  .gsteps { display:flex; flex-direction:column; gap:14px; }
+  .gmono-input { font-family:var(--mono) !important; font-size:11px !important; }
+  .btn-gtest { width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:var(--r); padding:9px; font-family:var(--mono); font-size:12px; color:var(--text2); cursor:pointer; transition:all .15s; }
+  .btn-gtest:hover { border-color:var(--border2); color:var(--text); }
+  .btn-gconnect { width:100%; background:var(--green); color:#0e0f12; border:none; border-radius:var(--r); padding:10px; font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer; transition:background .15s; }
+  .btn-gconnect:hover { background:#4d9960; }
+  .btn-gdisconn { width:100%; background:transparent; color:var(--red); border:1px solid rgba(212,90,90,0.3); border-radius:var(--r); padding:9px; font-size:13px; cursor:pointer; transition:all .15s; font-family:var(--sans); }
+  .btn-gdisconn:hover { background:rgba(212,90,90,0.08); }
+  .gtest-result { font-size:11px; font-family:var(--mono); padding:8px 12px; border-radius:var(--r); text-align:center; margin-top:4px; }
+  .gtest-result.ok  { background:rgba(91,166,104,0.1); color:var(--green); border:1px solid rgba(91,166,104,0.2); }
+  .gtest-result.err { background:rgba(212,90,90,0.1); color:var(--red); border:1px solid rgba(212,90,90,0.2); }
+
   .hdr-backup-btn { background:var(--bg3); border:1px solid var(--border); border-radius:var(--r); padding:6px 14px; font-size:12px; font-family:var(--mono); color:var(--text2); cursor:pointer; transition:all 0.15s; display:flex; align-items:center; gap:7px; }
   .hdr-backup-btn:hover { border-color:var(--border2); color:var(--text); }
 </style>
@@ -219,6 +255,13 @@
   <div class="logo-mark">CT</div>
   <h1>Control de Tareas</h1>
   <span class="header-sub" id="current-date"></span>
+  <div class="sync-bar" id="sync-bar">
+    <div class="sync-dot off" id="sync-dot"></div>
+    <span class="sync-lbl" id="sync-lbl">Sin conexión Google</span>
+    <span class="sync-time" id="sync-time"></span>
+    <button class="sync-manual-btn" id="sync-manual-btn" onclick="syncToCloud()" title="Sincronizar ahora" style="display:none">↺</button>
+  </div>
+  <button class="hdr-google-btn" id="hdr-google-btn" onclick="openGConfig()">☁ Google Sheets</button>
   <button class="hdr-backup-btn" onclick="openBackup()">⇅ Respaldo</button>
 </header>
 
@@ -418,6 +461,82 @@
 </div>
 
 <div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
+
+<!-- GOOGLE SHEETS CONFIG MODAL -->
+<div class="modal-overlay" id="gconfig-modal" onclick="if(event.target===this)closeGConfig()">
+  <div class="modal" style="width:560px;max-height:92vh">
+    <div class="modal-header">
+      <span class="modal-title">☁ Conectar con Google Sheets</span>
+      <button class="modal-close" onclick="closeGConfig()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="gsteps">
+        <div class="gstep">
+          <div class="gstep-num">1</div>
+          <div class="gstep-body">
+            <b>Crea una Google Sheets nueva</b>
+            <p>Ve a <a href="https://sheets.google.com" target="_blank" style="color:var(--accent)">sheets.google.com</a> y crea una hoja en blanco. Llámala por ejemplo "CDT2 Tareas".</p>
+          </div>
+        </div>
+        <div class="gstep">
+          <div class="gstep-num">2</div>
+          <div class="gstep-body">
+            <b>Abre Apps Script en esa hoja</b>
+            <p>Menú <code>Extensiones → Apps Script</code>. Borra el código existente y pega el contenido del archivo <code>cdt2-apps-script.gs</code> que descargaste junto a esta página.</p>
+          </div>
+        </div>
+        <div class="gstep">
+          <div class="gstep-num">3</div>
+          <div class="gstep-body">
+            <b>Cambia la clave secreta en el script</b>
+            <p>Busca la línea <code>SECRET_KEY: "cambiar_esta_clave"</code> y reemplázala por cualquier texto sin espacios que solo tú conozcas.</p>
+          </div>
+        </div>
+        <div class="gstep">
+          <div class="gstep-num">4</div>
+          <div class="gstep-body">
+            <b>Publica el script como Web App</b>
+            <p><code>Implementar → Nueva implementación</code> → Tipo: <code>Aplicación web</code> → Ejecutar como: <code>Yo</code> → Acceso: <code>Cualquier persona</code>. Autoriza los permisos y copia la URL.</p>
+          </div>
+        </div>
+        <div class="gstep">
+          <div class="gstep-num">5</div>
+          <div class="gstep-body">
+            <b>Pega la URL y tu clave aquí abajo y conecta</b>
+          </div>
+        </div>
+      </div>
+
+      <hr class="sep" style="margin:4px 0">
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div>
+          <label>URL del Web App</label>
+          <input type="text" id="g-url" class="gmono-input" placeholder="https://script.google.com/macros/s/XXXXXX/exec" />
+        </div>
+        <div>
+          <label>Clave secreta</label>
+          <input type="password" id="g-key" class="gmono-input" placeholder="tu_clave_secreta" />
+        </div>
+        <div>
+          <label>Auto-sincronización</label>
+          <select id="g-interval">
+            <option value="0">Solo manual (botón ↺)</option>
+            <option value="30">Cada 30 segundos</option>
+            <option value="60" selected>Cada 1 minuto</option>
+            <option value="300">Cada 5 minutos</option>
+          </select>
+        </div>
+        <div id="g-test-result" style="display:none" class="gtest-result"></div>
+        <button class="btn-gtest" onclick="testGConnection()">Probar conexión</button>
+        <button class="btn-gconnect" onclick="saveGConfig()">✓ Conectar y subir datos actuales</button>
+        <button class="btn-gdisconn" id="btn-gdisconn" style="display:none" onclick="disconnectGoogle()">Desconectar Google Sheets</button>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 <!-- BACKUP MODAL -->
 <div class="modal-overlay" id="backup-modal" onclick="handleOverlayClick(event)">
@@ -1014,6 +1133,196 @@ function splitCSVRow(row) {
   result.push(cur.trim());
   return result;
 }
+
+// ════════════════════════════════════════════
+//  GOOGLE SHEETS SYNC
+// ════════════════════════════════════════════
+
+let gConfig = JSON.parse(localStorage.getItem('ct_gconfig') || 'null');
+let _syncTimer = null;
+let _syncing = false;
+let _syncDebounce = null;
+
+// ── Init ─────────────────────────────────────
+function initGSync() {
+  updateGUI();
+  if (gConfig && gConfig.url) {
+    if (gConfig.interval > 0) startAutoSync();
+    syncFromCloud(); // carga inicial desde la nube
+  }
+}
+
+// ── UI helpers ───────────────────────────────
+function setSyncStatus(state, label, time) {
+  document.getElementById('sync-dot').className = 'sync-dot ' + state;
+  document.getElementById('sync-lbl').textContent = label;
+  document.getElementById('sync-time').textContent = time
+    ? time.toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'})
+    : '';
+}
+
+function updateGUI() {
+  const btn = document.getElementById('hdr-google-btn');
+  const manBtn = document.getElementById('sync-manual-btn');
+  if (gConfig && gConfig.url) {
+    btn.className = 'hdr-google-btn connected';
+    manBtn.style.display = 'inline';
+    document.getElementById('btn-gdisconn').style.display = 'block';
+  } else {
+    btn.className = 'hdr-google-btn';
+    manBtn.style.display = 'none';
+    setSyncStatus('off', 'Sin conexión Google');
+  }
+}
+
+// ── Modal ─────────────────────────────────────
+function openGConfig() {
+  document.getElementById('gconfig-modal').classList.add('open');
+  if (gConfig) {
+    document.getElementById('g-url').value = gConfig.url || '';
+    document.getElementById('g-key').value = gConfig.key || '';
+    document.getElementById('g-interval').value = String(gConfig.interval ?? 60);
+    document.getElementById('btn-gdisconn').style.display = 'block';
+  }
+  document.getElementById('g-test-result').style.display = 'none';
+}
+function closeGConfig() {
+  document.getElementById('gconfig-modal').classList.remove('open');
+}
+
+// ── Test connection ───────────────────────────
+async function testGConnection() {
+  const url = document.getElementById('g-url').value.trim();
+  const key = document.getElementById('g-key').value.trim();
+  const el  = document.getElementById('g-test-result');
+  if (!url || !key) { showGTestResult('Completa la URL y la clave', false); return; }
+  el.style.display = 'block'; el.className = 'gtest-result';
+  el.textContent = '⏳ Probando…';
+  try {
+    const r = await gPost(url, key, 'ping');
+    if (r.ok) showGTestResult('✓ Conexión exitosa — ' + r.msg, true);
+    else      showGTestResult('✗ ' + r.error, false);
+  } catch(e) { showGTestResult('✗ No se pudo conectar: ' + e.message, false); }
+}
+
+function showGTestResult(msg, ok) {
+  const el = document.getElementById('g-test-result');
+  el.style.display = 'block';
+  el.className = 'gtest-result ' + (ok ? 'ok' : 'err');
+  el.textContent = msg;
+}
+
+// ── Save config & connect ─────────────────────
+async function saveGConfig() {
+  const url      = document.getElementById('g-url').value.trim();
+  const key      = document.getElementById('g-key').value.trim();
+  const interval = parseInt(document.getElementById('g-interval').value);
+  if (!url || !key) { toast('Completa URL y clave'); return; }
+  gConfig = { url, key, interval };
+  localStorage.setItem('ct_gconfig', JSON.stringify(gConfig));
+  closeGConfig();
+  updateGUI();
+  startAutoSync();
+  await syncToCloud();
+  toast('Conectado a Google Sheets ✓');
+}
+
+function disconnectGoogle() {
+  if (!confirm('¿Desconectar Google Sheets? Los datos locales no se borrarán.')) return;
+  gConfig = null;
+  localStorage.removeItem('ct_gconfig');
+  if (_syncTimer) { clearInterval(_syncTimer); _syncTimer = null; }
+  if (_syncDebounce) { clearTimeout(_syncDebounce); _syncDebounce = null; }
+  updateGUI();
+  closeGConfig();
+  toast('Desconectado');
+}
+
+// ── Auto sync ─────────────────────────────────
+function startAutoSync() {
+  if (_syncTimer) clearInterval(_syncTimer);
+  if (gConfig && gConfig.interval > 0) {
+    _syncTimer = setInterval(syncToCloud, gConfig.interval * 1000);
+  }
+}
+
+// ── Push to cloud ─────────────────────────────
+async function syncToCloud() {
+  if (!gConfig || _syncing) return;
+  _syncing = true;
+  setSyncStatus('busy', 'Sincronizando…');
+  try {
+    const r = await gPost(gConfig.url, gConfig.key, 'save', {
+      tasks,
+      history,
+      notes: document.getElementById('notes-area').value
+    });
+    if (r.ok) setSyncStatus('ok', 'Sincronizado', new Date());
+    else      setSyncStatus('err', 'Error: ' + r.error);
+  } catch(e) { setSyncStatus('err', 'Sin conexión'); }
+  _syncing = false;
+}
+
+// ── Pull from cloud ───────────────────────────
+async function syncFromCloud() {
+  if (!gConfig || _syncing) return;
+  _syncing = true;
+  setSyncStatus('busy', 'Cargando desde nube…');
+  try {
+    const r = await gPost(gConfig.url, gConfig.key, 'load');
+    if (r.ok) {
+      tasks   = r.tasks   || [];
+      history = r.history || [];
+      localStorage.setItem('ct_tasks',   JSON.stringify(tasks));
+      localStorage.setItem('ct_history', JSON.stringify(history));
+      if (r.notes !== undefined) {
+        const na = document.getElementById('notes-area');
+        na.value = r.notes;
+        localStorage.setItem('ct_notes', r.notes);
+      }
+      renderAll();
+      setSyncStatus('ok', 'Datos cargados', new Date());
+    } else { setSyncStatus('err', 'Error: ' + r.error); }
+  } catch(e) { setSyncStatus('err', 'Sin conexión'); }
+  _syncing = false;
+}
+
+// ── HTTP helper ───────────────────────────────
+async function gPost(url, key, action, extra = {}) {
+  const res = await fetch(url, {
+    method:  'POST',
+    headers: { 'Content-Type': 'text/plain' },   // evita preflight CORS en Apps Script
+    body:    JSON.stringify({ action, key, ...extra })
+  });
+  return res.json();
+}
+
+// ── Patch save() to auto-push ─────────────────
+const _origSave = save;
+// Override save to also trigger cloud sync with debounce
+window.saveWithSync = function() {
+  localStorage.setItem('ct_tasks',   JSON.stringify(tasks));
+  localStorage.setItem('ct_history', JSON.stringify(history));
+  if (gConfig) {
+    if (_syncDebounce) clearTimeout(_syncDebounce);
+    _syncDebounce = setTimeout(syncToCloud, 1800);
+  }
+};
+
+// Monkey-patch all calls that call save()
+// We wrap by replacing the function reference
+(function() {
+  const orig = window.save || function(){};
+  window.save = function() {
+    orig();
+    if (gConfig) {
+      if (_syncDebounce) clearTimeout(_syncDebounce);
+      _syncDebounce = setTimeout(syncToCloud, 1800);
+    }
+  };
+})();
+
+initGSync();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
