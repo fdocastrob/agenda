@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Tareas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0e0f12; --bg2: #16181d; --bg3: #1e2028;
+    --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
+    --text: #f0efe8; --text2: #9a9890; --text3: #5e5d58;
+    --accent: #d4a84b; --accent2: #b8922f;
+    --blue: #4a8fd4; --green: #5ba668; --red: #d45a5a; --orange: #d4804a;
+    --mono: 'DM Mono', monospace; --sans: 'Sora', sans-serif;
+    --r: 8px; --r2: 12px;
+  }
+  body { background:var(--bg); color:var(--text); font-family:var(--sans); font-size:14px; min-height:100vh; display:flex; flex-direction:column; }
+
+  header { padding:20px 28px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px; background:var(--bg2); }
+  .logo-mark { width:32px; height:32px; background:var(--accent); border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:14px; font-weight:500; color:#0e0f12; flex-shrink:0; }
+  header h1 { font-size:16px; font-weight:500; letter-spacing:0.01em; }
+  .header-sub { font-size:12px; color:var(--text2); font-family:var(--mono); margin-left:auto; }
+
+  .layout { display:flex; flex:1; overflow:hidden; height:calc(100vh - 73px); }
+
+  /* SIDEBAR NUEVA TAREA */
+  aside { width:300px; flex-shrink:0; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; }
+  .aside-header { padding:20px 20px 12px; font-size:11px; font-family:var(--mono); color:var(--text3); letter-spacing:0.12em; text-transform:uppercase; border-bottom:1px solid var(--border); }
+  .aside-body { padding:16px; display:flex; flex-direction:column; gap:14px; }
+
+  label { display:block; font-size:11px; color:var(--text2); font-family:var(--mono); letter-spacing:0.06em; margin-bottom:6px; }
+  input[type="text"], input[type="date"], textarea, select {
+    width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:var(--r);
+    color:var(--text); font-family:var(--sans); font-size:13px; padding:9px 12px;
+    outline:none; transition:border-color 0.15s; appearance:none; -webkit-appearance:none;
+  }
+  input[type="text"]:focus, input[type="date"]:focus, textarea:focus, select:focus { border-color:var(--accent); }
+  textarea { resize:vertical; min-height:72px; line-height:1.5; }
+  select { cursor:pointer; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9890' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:32px; }
+
+  .priority-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .prio-btn { border:1px solid var(--border); border-radius:var(--r); padding:8px 6px; background:var(--bg3); color:var(--text2); cursor:pointer; font-family:var(--mono); font-size:10px; text-align:center; line-height:1.4; transition:all 0.15s; }
+  .prio-btn:hover { border-color:var(--border2); color:var(--text); }
+  .prio-btn[data-p="1"].active { border-color:var(--red); background:rgba(212,90,90,0.12); color:var(--red); }
+  .prio-btn[data-p="2"].active { border-color:var(--orange); background:rgba(212,128,74,0.12); color:var(--orange); }
+  .prio-btn[data-p="3"].active { border-color:var(--blue); background:rgba(74,143,212,0.12); color:var(--blue); }
+  .prio-btn[data-p="4"].active { border-color:var(--text3); background:rgba(94,93,88,0.12); color:var(--text2); }
+
+  /* DESTINO TOGGLE */
+  .destino-row { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .destino-btn { border:1px solid var(--border); border-radius:var(--r); padding:9px 6px; background:var(--bg3); color:var(--text2); cursor:pointer; font-family:var(--mono); font-size:11px; text-align:center; transition:all 0.15s; }
+  .destino-btn:hover { border-color:var(--border2); color:var(--text); }
+  .destino-btn.active { border-color:var(--accent); background:rgba(212,168,75,0.12); color:var(--accent); font-weight:500; }
+
+  .btn-add { width:100%; background:var(--accent); color:#0e0f12; border:none; border-radius:var(--r); padding:11px; font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer; transition:background 0.15s; letter-spacing:0.02em; }
+  .btn-add:hover { background:var(--accent2); }
+
+  /* RESTORE / SEND-TODAY buttons */
+  .act-btn.restore { font-size:11px; }
+  .act-btn.restore:hover { border-color:var(--green); color:var(--green); }
+  .act-btn.to-hoy:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* MAIN */
+  main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+  .tabs { display:flex; border-bottom:1px solid var(--border); background:var(--bg2); padding:0 24px; }
+  .tab-btn { background:none; border:none; color:var(--text2); font-family:var(--sans); font-size:13px; padding:16px 18px; cursor:pointer; border-bottom:2px solid transparent; transition:all 0.15s; display:flex; align-items:center; gap:8px; white-space:nowrap; }
+  .tab-btn:hover { color:var(--text); }
+  .tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .tab-count { background:var(--bg3); border-radius:10px; padding:1px 7px; font-size:11px; font-family:var(--mono); color:var(--text3); }
+  .tab-btn.active .tab-count { background:rgba(212,168,75,0.15); color:var(--accent); }
+
+  .search-bar { padding:14px 24px; border-bottom:1px solid var(--border); display:flex; gap:10px; align-items:center; background:var(--bg); }
+  .search-wrap { position:relative; flex:1; }
+  .search-wrap input { padding-left:32px; }
+  .search-ico { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text3); font-size:15px; }
+  .filter-chip { background:var(--bg3); border:1px solid var(--border); border-radius:20px; padding:5px 12px; font-size:12px; font-family:var(--mono); color:var(--text2); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+  .filter-chip:hover, .filter-chip.active { border-color:var(--accent); color:var(--accent); }
+
+  .tab-content { display:none; flex:1; overflow-y:auto; padding:16px 24px; }
+  .tab-content.active { display:block; }
+
+  .task-group { margin-bottom:24px; }
+  .task-group-label { font-size:10px; font-family:var(--mono); color:var(--text3); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+  .task-group-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  /* TASK CARD */
+  .task-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r2); padding:14px 16px; margin-bottom:6px; display:grid; grid-template-columns:24px 1fr auto; gap:12px; align-items:start; transition:border-color 0.15s; }
+  .task-card:hover { border-color:var(--border2); }
+  .task-card.done { opacity:0.45; }
+  .task-card.done .task-title { text-decoration:line-through; }
+  .task-card.selected { border-color:var(--accent) !important; background:rgba(212,168,75,0.04); }
+
+  .task-check { width:18px; height:18px; border:1.5px solid var(--border2); border-radius:5px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; transition:all 0.15s; background:transparent; color:transparent; font-size:11px; }
+  .task-check:hover { border-color:var(--accent); }
+  .task-card.done .task-check { background:var(--accent); border-color:var(--accent); color:#0e0f12; }
+
+  .task-title { font-size:13px; font-weight:500; color:var(--text); margin-bottom:5px; line-height:1.4; }
+  .task-desc { font-size:12px; color:var(--text2); line-height:1.5; margin-bottom:8px; }
+  .task-meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+
+  /* nota preview en card */
+  .task-note-preview { font-size:11px; color:var(--text3); font-family:var(--mono); margin-top:6px; padding:6px 8px; background:var(--bg3); border-radius:5px; border-left:2px solid var(--border2); line-height:1.5; white-space:pre-wrap; word-break:break-word; }
+
+  .badge { font-size:10px; font-family:var(--mono); padding:2px 8px; border-radius:4px; letter-spacing:0.04em; }
+  .badge-tipo { background:rgba(74,143,212,0.1); color:#6baae0; border:1px solid rgba(74,143,212,0.2); }
+  .badge-cat { background:rgba(91,166,104,0.1); color:#7ecb8e; border:1px solid rgba(91,166,104,0.2); }
+  .badge-date { background:var(--bg3); color:var(--text3); }
+  .badge-nota { background:rgba(212,168,75,0.08); color:var(--accent); border:1px solid rgba(212,168,75,0.2); cursor:pointer; }
+
+  .prio-dot { width:6px; height:6px; border-radius:50%; display:inline-block; flex-shrink:0; margin-top:6px; }
+  .p1 { background:var(--red); } .p2 { background:var(--orange); } .p3 { background:var(--blue); } .p4 { background:var(--text3); }
+
+  .task-actions { display:flex; gap:4px; opacity:0; transition:opacity 0.15s; }
+  .task-card:hover .task-actions { opacity:1; }
+  .task-card.selected .task-actions { opacity:1; }
+  .act-btn { width:26px; height:26px; border:1px solid var(--border); border-radius:6px; background:var(--bg3); color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:13px; transition:all 0.15s; }
+  .act-btn:hover { border-color:var(--border2); color:var(--text); }
+  .act-btn.del:hover { border-color:var(--red); color:var(--red); }
+  .act-btn.arch:hover { border-color:var(--accent); color:var(--accent); }
+  .act-btn.edit-btn { font-size:11px; }
+  .act-btn.edit-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(212,168,75,0.08); }
+
+  /* PANEL DE EDICIÓN (drawer derecho) */
+  .edit-panel {
+    width:0; flex-shrink:0; background:var(--bg2); border-left:1px solid var(--border);
+    display:flex; flex-direction:column; overflow:hidden;
+    transition:width 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+  .edit-panel.open { width:300px; }
+  .edit-panel-inner { width:300px; display:flex; flex-direction:column; height:100%; overflow-y:auto; }
+  .edit-panel-header { padding:18px 20px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .edit-panel-title { font-size:11px; font-family:var(--mono); color:var(--text3); letter-spacing:0.12em; text-transform:uppercase; }
+  .close-panel { background:none; border:none; color:var(--text3); cursor:pointer; font-size:16px; line-height:1; transition:color 0.15s; padding:2px 4px; }
+  .close-panel:hover { color:var(--text); }
+  .edit-panel-body { padding:16px; display:flex; flex-direction:column; gap:14px; flex:1; }
+  .edit-task-name { font-size:13px; font-weight:500; color:var(--text); margin-bottom:2px; line-height:1.4; word-break:break-word; }
+  .btn-save { width:100%; background:var(--accent); color:#0e0f12; border:none; border-radius:var(--r); padding:10px; font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer; transition:background 0.15s; }
+  .btn-save:hover { background:var(--accent2); }
+  .btn-cancel-edit { width:100%; background:transparent; color:var(--text2); border:1px solid var(--border); border-radius:var(--r); padding:9px; font-family:var(--sans); font-size:13px; cursor:pointer; transition:all 0.15s; }
+  .btn-cancel-edit:hover { border-color:var(--border2); color:var(--text); }
+  .edit-nota-area { resize:vertical; min-height:120px; line-height:1.6; font-family:var(--mono) !important; font-size:12px !important; }
+
+  /* STATS */
+  .stats-row { display:flex; gap:8px; padding:12px 24px; border-bottom:1px solid var(--border); background:var(--bg); }
+  .stat-chip { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:5px 12px; font-size:11px; font-family:var(--mono); color:var(--text2); display:flex; gap:6px; align-items:center; }
+  .stat-num { color:var(--text); font-weight:500; }
+
+  /* HISTORIA */
+  .hist-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r2); padding:12px 16px; margin-bottom:6px; display:flex; align-items:center; gap:12px; opacity:0.7; }
+  .hist-check { color:var(--green); font-size:15px; }
+  .hist-title { font-size:13px; color:var(--text); flex:1; text-decoration:line-through; opacity:0.6; }
+  .hist-date { font-size:11px; font-family:var(--mono); color:var(--text3); }
+
+  /* NOTAS */
+  .notes-area { width:100%; height:calc(100vh - 200px); background:var(--bg2); border:1px solid var(--border); border-radius:var(--r2); color:var(--text); font-family:var(--mono); font-size:13px; padding:20px; resize:none; outline:none; line-height:1.8; }
+  .notes-area:focus { border-color:var(--border2); }
+
+  /* EMPTY */
+  .empty { text-align:center; padding:60px 20px; color:var(--text3); }
+  .empty-icon { font-size:36px; margin-bottom:12px; opacity:0.4; }
+  .empty p { font-size:13px; font-family:var(--mono); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width:5px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:10px; }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:24px; right:24px; background:var(--bg3); border:1px solid var(--border2); border-radius:var(--r2); padding:12px 18px; font-size:13px; color:var(--text); opacity:0; transform:translateY(10px); transition:all 0.2s; z-index:200; pointer-events:none; font-family:var(--mono); display:flex; align-items:center; gap:10px; }
+  .toast.show { opacity:1; transform:translateY(0); }
+  .toast-dot { width:7px; height:7px; border-radius:50%; background:var(--green); flex-shrink:0; }
+
+  /* DIVIDER */
+  hr.sep { border:none; border-top:1px solid var(--border); margin:0; }
+
+  /* BACKUP MODAL */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:300; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+  .modal { background:var(--bg2); border:1px solid var(--border2); border-radius:16px; width:520px; max-width:95vw; max-height:90vh; overflow-y:auto; }
+  .modal-header { padding:22px 24px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .modal-title { font-size:15px; font-weight:500; }
+  .modal-close { background:none; border:none; color:var(--text3); font-size:18px; cursor:pointer; padding:2px 6px; transition:color 0.15s; line-height:1; }
+  .modal-close:hover { color:var(--text); }
+  .modal-body { padding:20px 24px; display:flex; flex-direction:column; gap:20px; }
+  .modal-section-title { font-size:10px; font-family:var(--mono); color:var(--text3); letter-spacing:0.12em; text-transform:uppercase; margin-bottom:10px; }
+  .backup-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+  .backup-btn { border:1px solid var(--border); border-radius:var(--r2); padding:14px 10px; background:var(--bg3); cursor:pointer; transition:all 0.15s; text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .backup-btn:hover { border-color:var(--border2); background:var(--bg); }
+  .backup-btn .bico { font-size:22px; }
+  .backup-btn .blabel { font-size:12px; font-weight:500; color:var(--text); }
+  .backup-btn .bsub { font-size:10px; font-family:var(--mono); color:var(--text3); }
+  .backup-btn.csv:hover { border-color:var(--green); }
+  .backup-btn.xlsx:hover { border-color:var(--blue); }
+  .backup-btn.json:hover { border-color:var(--orange); }
+  .import-zone { border:1.5px dashed var(--border2); border-radius:var(--r2); padding:24px; text-align:center; cursor:pointer; transition:all 0.15s; }
+  .import-zone:hover, .import-zone.drag { border-color:var(--accent); background:rgba(212,168,75,0.05); }
+  .import-zone p { font-size:13px; color:var(--text2); line-height:1.6; }
+  .import-zone small { font-size:11px; font-family:var(--mono); color:var(--text3); }
+  .import-mode-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+  .imode-btn { border:1px solid var(--border); border-radius:var(--r); padding:8px; background:var(--bg3); color:var(--text2); cursor:pointer; font-family:var(--mono); font-size:11px; text-align:center; transition:all 0.15s; }
+  .imode-btn.active { border-color:var(--accent); background:rgba(212,168,75,0.1); color:var(--accent); }
+  .btn-import-confirm { width:100%; background:var(--accent); color:#0e0f12; border:none; border-radius:var(--r); padding:10px; font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer; transition:background 0.15s; margin-top:4px; }
+  .btn-import-confirm:hover { background:var(--accent2); }
+  .btn-import-confirm:disabled { opacity:0.35; cursor:default; }
+  .import-preview { background:var(--bg3); border-radius:var(--r); padding:10px 12px; font-size:11px; font-family:var(--mono); color:var(--text2); line-height:1.7; }
+
+  /* HEADER backup btn */
+  .hdr-backup-btn { background:var(--bg3); border:1px solid var(--border); border-radius:var(--r); padding:6px 14px; font-size:12px; font-family:var(--mono); color:var(--text2); cursor:pointer; transition:all 0.15s; display:flex; align-items:center; gap:7px; }
+  .hdr-backup-btn:hover { border-color:var(--border2); color:var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">CT</div>
+  <h1>Control de Tareas</h1>
+  <span class="header-sub" id="current-date"></span>
+  <button class="hdr-backup-btn" onclick="openBackup()">⇅ Respaldo</button>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR: NUEVA TAREA -->
+  <aside>
+    <div class="aside-header">+ Nueva tarea</div>
+    <div class="aside-body">
+      <div>
+        <label>Título *</label>
+        <input type="text" id="inp-titulo" placeholder="Nombre de la tarea..." />
+      </div>
+      <div>
+        <label>Descripción</label>
+        <textarea id="inp-desc" placeholder="Detalles adicionales..."></textarea>
+      </div>
+      <div>
+        <label>Tipo de trabajo</label>
+        <select id="inp-tipo">
+          <option value="">— Seleccionar —</option>
+          <option>Coordinación Interna</option>
+          <option>Coordinación Externa</option>
+          <option>Permisos de Trabajos</option>
+          <option>Personales</option>
+          <option>SAP</option>
+          <option>SISO</option>
+        </select>
+      </div>
+      <div>
+        <label>Categoría de trabajo</label>
+        <select id="inp-cat">
+          <option value="">— Seleccionar —</option>
+          <option>Planificación</option>
+          <option>Ejecución</option>
+          <option>Revisión</option>
+          <option>Aprobación</option>
+          <option>Seguimiento</option>
+          <option>Documentación</option>
+          <option>Reunión</option>
+          <option>Capacitación</option>
+        </select>
+      </div>
+      <div>
+        <label>Prioridad</label>
+        <div class="priority-grid">
+          <button class="prio-btn" data-p="1">🔴 1 — Urgente<br>+ Importante</button>
+          <button class="prio-btn" data-p="2">🟠 2 — Importante<br>+ No urgente</button>
+          <button class="prio-btn" data-p="3">🔵 3 — Urgente<br>+ No importante</button>
+          <button class="prio-btn" data-p="4">⚪ 4 — Ni urgente<br>ni importante</button>
+        </div>
+      </div>
+      <div>
+        <label>Fecha de vencimiento</label>
+        <input type="date" id="inp-fecha" />
+      </div>
+      <div>
+        <label>Nota inicial (opcional)</label>
+        <textarea id="inp-nota" placeholder="Notas, contexto, enlaces..." style="min-height:60px"></textarea>
+      </div>
+      <div>
+        <label>Agregar a</label>
+        <div class="destino-row">
+          <button class="destino-btn active" id="dest-hoy" onclick="setDestino('hoy',this)">📅 Hoy</button>
+          <button class="destino-btn" id="dest-backlog" onclick="setDestino('backlog',this)">📋 Backlog</button>
+        </div>
+      </div>
+      <button class="btn-add" onclick="addTask()">＋ Agregar tarea</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('hoy',this)">Hoy <span class="tab-count" id="cnt-hoy">0</span></button>
+      <button class="tab-btn" onclick="switchTab('backlog',this)">Backlog <span class="tab-count" id="cnt-backlog">0</span></button>
+      <button class="tab-btn" onclick="switchTab('historia',this)">Historia <span class="tab-count" id="cnt-hist">0</span></button>
+      <button class="tab-btn" onclick="switchTab('notas',this)">Notas</button>
+    </div>
+
+    <div class="search-bar">
+      <div class="search-wrap">
+        <span class="search-ico">⌕</span>
+        <input type="text" id="search-inp" placeholder="Buscar tarea..." oninput="renderAll()" />
+      </div>
+      <button class="filter-chip active" onclick="filterPrio(0,this)">Todos</button>
+      <button class="filter-chip" onclick="filterPrio(1,this)">P1</button>
+      <button class="filter-chip" onclick="filterPrio(2,this)">P2</button>
+      <button class="filter-chip" onclick="filterPrio(3,this)">P3</button>
+      <button class="filter-chip" onclick="filterPrio(4,this)">P4</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-chip">Pendientes <span class="stat-num" id="st-pend">0</span></div>
+      <div class="stat-chip">Completadas hoy <span class="stat-num" id="st-done">0</span></div>
+      <div class="stat-chip">Backlog <span class="stat-num" id="st-back">0</span></div>
+      <div class="stat-chip">Archivadas <span class="stat-num" id="st-arch">0</span></div>
+    </div>
+
+    <div style="display:flex;flex:1;overflow:hidden;">
+      <div style="flex:1;overflow-y:auto;">
+        <div class="tab-content active" id="tab-hoy">
+          <div class="task-group">
+            <div class="task-group-label">pendientes</div>
+            <div id="list-hoy-pend"></div>
+          </div>
+          <div class="task-group">
+            <div class="task-group-label">completadas</div>
+            <div id="list-hoy-done"></div>
+          </div>
+        </div>
+        <div class="tab-content" id="tab-backlog">
+          <div class="task-group">
+            <div class="task-group-label">tareas programadas</div>
+            <div id="list-backlog"></div>
+          </div>
+        </div>
+        <div class="tab-content" id="tab-historia">
+          <div class="task-group">
+            <div class="task-group-label">tareas archivadas</div>
+            <div id="list-hist"></div>
+          </div>
+        </div>
+        <div class="tab-content" id="tab-notas">
+          <textarea class="notes-area" id="notes-area" placeholder="Escribe tus notas aquí...&#10;&#10;Este espacio es tuyo — ideas, recordatorios, pendientes informales..."></textarea>
+        </div>
+      </div>
+
+      <!-- PANEL EDICIÓN DERECHO -->
+      <div class="edit-panel" id="edit-panel">
+        <div class="edit-panel-inner">
+          <div class="edit-panel-header">
+            <span class="edit-panel-title">Editar tarea</span>
+            <button class="close-panel" onclick="closeEditPanel()">✕</button>
+          </div>
+          <div class="edit-panel-body">
+            <div>
+              <label>Título</label>
+              <input type="text" id="ep-titulo" />
+            </div>
+            <div>
+              <label>Descripción</label>
+              <textarea id="ep-desc" style="min-height:60px"></textarea>
+            </div>
+            <hr class="sep">
+            <div>
+              <label>Tipo de trabajo</label>
+              <select id="ep-tipo">
+                <option value="">— Sin tipo —</option>
+                <option>Coordinación Interna</option>
+                <option>Coordinación Externa</option>
+                <option>Permisos de Trabajos</option>
+                <option>Personales</option>
+                <option>SAP</option>
+                <option>SISO</option>
+              </select>
+            </div>
+            <div>
+              <label>Categoría de trabajo</label>
+              <select id="ep-cat">
+                <option value="">— Sin categoría —</option>
+                <option>Planificación</option>
+                <option>Ejecución</option>
+                <option>Revisión</option>
+                <option>Aprobación</option>
+                <option>Seguimiento</option>
+                <option>Documentación</option>
+                <option>Reunión</option>
+                <option>Capacitación</option>
+              </select>
+            </div>
+            <div>
+              <label>Prioridad</label>
+              <div class="priority-grid" id="ep-prio-grid">
+                <button class="prio-btn" data-ep="1">🔴 1 — Urgente<br>+ Importante</button>
+                <button class="prio-btn" data-ep="2">🟠 2 — Importante<br>+ No urgente</button>
+                <button class="prio-btn" data-ep="3">🔵 3 — Urgente<br>+ No importante</button>
+                <button class="prio-btn" data-ep="4">⚪ 4 — Ni urgente<br>ni importante</button>
+              </div>
+            </div>
+            <div>
+              <label>Fecha de vencimiento</label>
+              <input type="date" id="ep-fecha" />
+            </div>
+            <hr class="sep">
+            <div>
+              <label>📝 Nota de la tarea</label>
+              <textarea id="ep-nota" class="edit-nota-area" placeholder="Agrega contexto, avances, links, observaciones..."></textarea>
+            </div>
+            <button class="btn-save" onclick="saveEdit()">Guardar cambios</button>
+            <button class="btn-cancel-edit" onclick="closeEditPanel()">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
+
+<!-- BACKUP MODAL -->
+<div class="modal-overlay" id="backup-modal" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Respaldo y restauración</span>
+      <button class="modal-close" onclick="closeBackup()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- EXPORTAR -->
+      <div>
+        <div class="modal-section-title">Exportar datos</div>
+        <div class="backup-grid">
+          <button class="backup-btn csv" onclick="exportCSV()">
+            <span class="bico">📄</span>
+            <span class="blabel">CSV</span>
+            <span class="bsub">Excel / Sheets</span>
+          </button>
+          <button class="backup-btn xlsx" onclick="exportXLSX()">
+            <span class="bico">📊</span>
+            <span class="blabel">XLSX</span>
+            <span class="bsub">Excel nativo</span>
+          </button>
+          <button class="backup-btn json" onclick="exportJSON()">
+            <span class="bico">🗂</span>
+            <span class="blabel">JSON</span>
+            <span class="bsub">Respaldo completo</span>
+          </button>
+        </div>
+        <p style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:10px;line-height:1.6">
+          CSV y XLSX exportan todas las tareas (activas + historia) en una planilla.<br>
+          JSON incluye además las notas globales — ideal para respaldo completo.
+        </p>
+      </div>
+
+      <hr class="sep">
+
+      <!-- IMPORTAR -->
+      <div>
+        <div class="modal-section-title">Importar / restaurar</div>
+        <div class="import-mode-row">
+          <button class="imode-btn active" id="imode-merge" onclick="setImportMode('merge',this)">Combinar con datos actuales</button>
+          <button class="imode-btn" id="imode-replace" onclick="setImportMode('replace',this)">Reemplazar todo</button>
+        </div>
+        <div style="margin-top:12px">
+          <div class="import-zone" id="import-zone" onclick="triggerImport()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+            <p>Arrastra un archivo aquí o haz clic para seleccionar</p>
+            <small>Formatos aceptados: .json · .csv · .xlsx</small>
+          </div>
+          <input type="file" id="file-input" accept=".json,.csv,.xlsx" style="display:none" onchange="readFile(this)">
+        </div>
+        <div id="import-preview" style="display:none" class="import-preview"></div>
+        <button class="btn-import-confirm" id="btn-import-confirm" disabled onclick="confirmImport()">Importar datos</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const PRIO_LABEL = { 1:'1 — Urgente + Importante', 2:'2 — Importante + No urgente', 3:'3 — Urgente + No importante', 4:'4 — Ni urgente ni importante' };
+const PRIO_CLASS = { 1:'p1', 2:'p2', 3:'p3', 4:'p4' };
+
+let tasks = JSON.parse(localStorage.getItem('ct_tasks') || '[]');
+let history = JSON.parse(localStorage.getItem('ct_history') || '[]');
+let selectedPrio = null;
+let editPrio = null;
+let filterPrioVal = 0;
+let editingId = null;
+let destinoActual = 'hoy';
+
+const today = new Date();
+const todayStr = today.toISOString().split('T')[0];
+
+document.getElementById('current-date').textContent = today.toLocaleDateString('es-CL',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+document.getElementById('inp-fecha').value = todayStr;
+
+const notesArea = document.getElementById('notes-area');
+notesArea.value = localStorage.getItem('ct_notes') || '';
+notesArea.addEventListener('input', () => localStorage.setItem('ct_notes', notesArea.value));
+
+// Prioridad sidebar
+document.querySelectorAll('.prio-btn[data-p]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.prio-btn[data-p]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedPrio = parseInt(btn.dataset.p);
+  });
+});
+
+// Prioridad panel edición
+document.querySelectorAll('.prio-btn[data-ep]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.prio-btn[data-ep]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    editPrio = parseInt(btn.dataset.ep);
+  });
+});
+
+function setDestino(dest, el) {
+  destinoActual = dest;
+  document.querySelectorAll('.destino-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  // Ajustar fecha por defecto según destino
+  if (dest === 'hoy') {
+    document.getElementById('inp-fecha').value = todayStr;
+  } else {
+    document.getElementById('inp-fecha').value = '';
+  }
+}
+
+function save() {
+  localStorage.setItem('ct_tasks', JSON.stringify(tasks));
+  localStorage.setItem('ct_history', JSON.stringify(history));
+}
+
+function addTask() {
+  const titulo = document.getElementById('inp-titulo').value.trim();
+  if (!titulo) { toast('El título es requerido'); return; }
+  const fechaVal = document.getElementById('inp-fecha').value;
+  const fecha = destinoActual === 'hoy' ? todayStr : (fechaVal || '');
+  tasks.unshift({
+    id: Date.now(),
+    titulo,
+    desc: document.getElementById('inp-desc').value.trim(),
+    tipo: document.getElementById('inp-tipo').value,
+    cat: document.getElementById('inp-cat').value,
+    prio: selectedPrio || 4,
+    fecha,
+    nota: document.getElementById('inp-nota').value.trim(),
+    done: false,
+    creado: todayStr
+  });
+  save(); renderAll();
+  const dest = destinoActual === 'hoy' ? 'Hoy' : 'Backlog';
+  toast(`Tarea agregada en ${dest} ✓`);
+  ['inp-titulo','inp-desc','inp-nota'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('inp-tipo').value = '';
+  document.getElementById('inp-cat').value = '';
+  document.getElementById('inp-fecha').value = destinoActual === 'hoy' ? todayStr : '';
+  document.querySelectorAll('.prio-btn[data-p]').forEach(b => b.classList.remove('active'));
+  selectedPrio = null;
+}
+
+function toggleDone(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  if (t.done) t.doneAt = todayStr;
+  save(); renderAll();
+}
+
+function archiveTask(id) {
+  const idx = tasks.findIndex(t => t.id === id);
+  if (idx < 0) return;
+  const t = tasks.splice(idx, 1)[0];
+  t.archivedAt = todayStr;
+  history.unshift(t);
+  if (editingId === id) closeEditPanel();
+  save(); renderAll(); toast('Tarea archivada');
+}
+
+function deleteTask(id, fromHist = false) {
+  if (!confirm('¿Eliminar esta tarea?')) return;
+  if (fromHist) history = history.filter(t => t.id !== id);
+  else tasks = tasks.filter(t => t.id !== id);
+  if (editingId === id) closeEditPanel();
+  save(); renderAll(); toast('Tarea eliminada');
+}
+
+// Restaurar tarea desde Historia → Hoy
+function restoreToHoy(id) {
+  const idx = history.findIndex(t => t.id === id);
+  if (idx < 0) return;
+  const t = history.splice(idx, 1)[0];
+  t.done = false;
+  t.fecha = todayStr;
+  delete t.archivedAt;
+  delete t.doneAt;
+  tasks.unshift(t);
+  save(); renderAll(); toast('Tarea restaurada en Hoy ✓');
+}
+
+// Mover tarea de Backlog → Hoy
+function sendToHoy(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  t.fecha = todayStr;
+  t.done = false;
+  save(); renderAll(); toast('Tarea enviada a Hoy ✓');
+  // Cambiar a pestaña Hoy
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-hoy').classList.add('active');
+  document.querySelector('.tab-btn[onclick*="hoy"]').classList.add('active');
+}
+
+function openEditPanel(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  editingId = id;
+  document.getElementById('ep-titulo').value = t.titulo || '';
+  document.getElementById('ep-desc').value = t.desc || '';
+  document.getElementById('ep-tipo').value = t.tipo || '';
+  document.getElementById('ep-cat').value = t.cat || '';
+  document.getElementById('ep-fecha').value = t.fecha || '';
+  document.getElementById('ep-nota').value = t.nota || '';
+  editPrio = t.prio || 4;
+  document.querySelectorAll('.prio-btn[data-ep]').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.ep) === editPrio);
+  });
+  document.getElementById('edit-panel').classList.add('open');
+  renderAll();
+}
+
+function closeEditPanel() {
+  editingId = null;
+  document.getElementById('edit-panel').classList.remove('open');
+  renderAll();
+}
+
+function saveEdit() {
+  if (!editingId) return;
+  const t = tasks.find(t => t.id === editingId);
+  if (!t) return;
+  const titulo = document.getElementById('ep-titulo').value.trim();
+  if (!titulo) { toast('El título no puede estar vacío'); return; }
+  t.titulo = titulo;
+  t.desc = document.getElementById('ep-desc').value.trim();
+  t.tipo = document.getElementById('ep-tipo').value;
+  t.cat = document.getElementById('ep-cat').value;
+  t.prio = editPrio || t.prio;
+  t.fecha = document.getElementById('ep-fecha').value;
+  t.nota = document.getElementById('ep-nota').value.trim();
+  save(); renderAll(); toast('Cambios guardados ✓');
+}
+
+function filterPrio(val, el) {
+  filterPrioVal = val;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderAll();
+}
+
+function getSearch() { return document.getElementById('search-inp').value.trim().toLowerCase(); }
+function matchSearch(t) {
+  const s = getSearch();
+  if (!s) return true;
+  return (t.titulo||'').toLowerCase().includes(s) || (t.desc||'').toLowerCase().includes(s) || (t.tipo||'').toLowerCase().includes(s) || (t.nota||'').toLowerCase().includes(s);
+}
+function matchPrio(t) { return !filterPrioVal || t.prio === filterPrioVal; }
+
+function makeCard(t, fromBacklog = false) {
+  const prioClass = PRIO_CLASS[t.prio] || 'p4';
+  const isEditing = editingId === t.id;
+  const card = document.createElement('div');
+  card.className = 'task-card' + (t.done ? ' done' : '') + (isEditing ? ' selected' : '');
+
+  const notaPreview = t.nota
+    ? `<div class="task-note-preview">${escHtml(t.nota.length > 120 ? t.nota.slice(0,120)+'…' : t.nota)}</div>`
+    : '';
+
+  card.innerHTML = `
+    <div class="task-check" onclick="toggleDone(${t.id})">✓</div>
+    <div class="task-body">
+      <div class="task-title">${escHtml(t.titulo)}</div>
+      ${t.desc ? `<div class="task-desc">${escHtml(t.desc)}</div>` : ''}
+      <div class="task-meta">
+        <span class="prio-dot ${prioClass}" title="${PRIO_LABEL[t.prio]||''}"></span>
+        ${t.tipo ? `<span class="badge badge-tipo">${escHtml(t.tipo)}</span>` : ''}
+        ${t.cat ? `<span class="badge badge-cat">${escHtml(t.cat)}</span>` : ''}
+        ${t.fecha ? `<span class="badge badge-date">${t.fecha}</span>` : ''}
+        ${t.nota ? `<span class="badge badge-nota" onclick="openEditPanel(${t.id})">📝 nota</span>` : ''}
+      </div>
+      ${notaPreview}
+    </div>
+    <div class="task-actions">
+      ${fromBacklog ? `<button class="act-btn to-hoy" onclick="sendToHoy(${t.id})" title="Mover a Hoy">📅</button>` : ''}
+      <button class="act-btn edit-btn ${isEditing?'active':''}" onclick="openEditPanel(${t.id})" title="Editar">✎</button>
+      <button class="act-btn arch" onclick="archiveTask(${t.id})" title="Archivar">↗</button>
+      <button class="act-btn del" onclick="deleteTask(${t.id})" title="Eliminar">✕</button>
+    </div>
+  `;
+  return card;
+}
+
+function makeHistCard(t) {
+  const prioClass = PRIO_CLASS[t.prio] || 'p4';
+  const div = document.createElement('div');
+  div.className = 'hist-card';
+  div.innerHTML = `
+    <span class="hist-check">✓</span>
+    <div style="flex:1;min-width:0">
+      <div class="hist-title">${escHtml(t.titulo)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;align-items:center">
+        <span class="prio-dot ${prioClass}" style="margin-top:0"></span>
+        ${t.tipo ? `<span class="badge badge-tipo" style="font-size:10px">${escHtml(t.tipo)}</span>` : ''}
+        ${t.cat ? `<span class="badge badge-cat" style="font-size:10px">${escHtml(t.cat)}</span>` : ''}
+        ${t.nota ? `<span class="badge badge-nota" style="font-size:10px">📝 nota</span>` : ''}
+      </div>
+    </div>
+    <span class="hist-date" style="flex-shrink:0">${t.archivedAt || t.doneAt || ''}</span>
+    <button class="act-btn restore" onclick="restoreToHoy(${t.id})" title="Restaurar en Hoy" style="flex-shrink:0">📅</button>
+    <button class="act-btn del" onclick="deleteTask(${t.id}, true)" title="Eliminar" style="flex-shrink:0">✕</button>
+  `;
+  return div;
+}
+
+function renderAll() {
+  const hoyPend = tasks.filter(t => !t.done && t.fecha === todayStr && matchSearch(t) && matchPrio(t));
+  const hoyDone = tasks.filter(t =>  t.done && t.fecha === todayStr && matchSearch(t) && matchPrio(t));
+  render('list-hoy-pend', hoyPend, false);
+  render('list-hoy-done', hoyDone, false);
+
+  const backlog = tasks.filter(t => t.fecha !== todayStr && matchSearch(t) && matchPrio(t));
+  renderBacklog('list-backlog', backlog);
+
+  const hist = history.filter(t => matchSearch(t) && matchPrio(t));
+  const hEl = document.getElementById('list-hist');
+  hEl.innerHTML = '';
+  if (!hist.length) hEl.innerHTML = emptyHtml('Sin tareas archivadas');
+  else hist.forEach(t => hEl.appendChild(makeHistCard(t)));
+
+  document.getElementById('cnt-hoy').textContent = tasks.filter(t => t.fecha === todayStr).length;
+  document.getElementById('cnt-backlog').textContent = tasks.filter(t => t.fecha !== todayStr).length;
+  document.getElementById('cnt-hist').textContent = history.length;
+  document.getElementById('st-pend').textContent = tasks.filter(t => !t.done).length;
+  document.getElementById('st-done').textContent = tasks.filter(t => t.done && t.doneAt === todayStr).length;
+  document.getElementById('st-back').textContent = tasks.filter(t => t.fecha !== todayStr && !t.done).length;
+  document.getElementById('st-arch').textContent = history.length;
+}
+
+function render(elId, list, fromBacklog) {
+  const el = document.getElementById(elId);
+  el.innerHTML = '';
+  if (!list.length) { el.innerHTML = emptyHtml('Sin tareas'); return; }
+  list.forEach(t => el.appendChild(makeCard(t, fromBacklog)));
+}
+
+function renderBacklog(elId, list) {
+  const el = document.getElementById(elId);
+  el.innerHTML = '';
+  if (!list.length) { el.innerHTML = emptyHtml('Sin tareas en backlog'); return; }
+  list.forEach(t => el.appendChild(makeCard(t, true)));
+}
+
+function emptyHtml(msg) {
+  return `<div class="empty"><div class="empty-icon">◻</div><p>${msg}</p></div>`;
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+renderAll();
+
+// ── BACKUP & IMPORT ──────────────────────────────────────────────
+
+function openBackup() {
+  document.getElementById('backup-modal').classList.add('open');
+  resetImportUI();
+}
+function closeBackup() { document.getElementById('backup-modal').classList.remove('open'); }
+function handleOverlayClick(e) { if (e.target === document.getElementById('backup-modal')) closeBackup(); }
+
+// ── EXPORT ──────────────────────────────────────────────────────
+
+function allTaskRows() {
+  const cols = ['tipo','titulo','desc','cat','prio','prioLabel','fecha','done','doneAt','archivedAt','nota','creado','origen'];
+  const rows = [cols];
+  const toRow = (t, origen) => [
+    t.tipo||'', t.titulo||'', t.desc||'', t.cat||'',
+    t.prio||'', PRIO_LABEL[t.prio]||'',
+    t.fecha||'', t.done?'Si':'No',
+    t.doneAt||'', t.archivedAt||'',
+    t.nota||'', t.creado||'', origen
+  ];
+  tasks.forEach(t => rows.push(toRow(t, t.fecha===todayStr?'Hoy':'Backlog')));
+  history.forEach(t => rows.push(toRow(t, 'Historia')));
+  return rows;
+}
+
+function exportCSV() {
+  const rows = allTaskRows();
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const bom = '\uFEFF';
+  download(bom + csv, `tareas_${todayStr}.csv`, 'text/csv;charset=utf-8');
+  toast('CSV exportado ✓');
+}
+
+function exportJSON() {
+  const data = { version:2, exportedAt: new Date().toISOString(), tasks, history, notes: notesArea.value };
+  download(JSON.stringify(data, null, 2), `tareas_${todayStr}.json`, 'application/json');
+  toast('JSON exportado ✓');
+}
+
+function exportXLSX() {
+  if (!window.XLSX) { toast('Cargando librería...'); return; }
+  const rows = allTaskRows();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  // Ancho de columnas
+  ws['!cols'] = [10,30,40,18,6,35,12,6,12,12,50,12,10].map(w=>({wch:w}));
+  // Estilo encabezado (solo disponible en xlsx pro, pero se aplica de todos modos)
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Tareas');
+  // Hoja Historia separada
+  const histRows = [allTaskRows()[0]];
+  history.forEach(t => histRows.push([t.tipo||'',t.titulo||'',t.desc||'',t.cat||'',t.prio||'',PRIO_LABEL[t.prio]||'',t.fecha||'',t.done?'Si':'No',t.doneAt||'',t.archivedAt||'',t.nota||'',t.creado||'','Historia']));
+  const ws2 = XLSX.utils.aoa_to_sheet(histRows);
+  ws2['!cols'] = ws['!cols'];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Historia');
+  XLSX.writeFile(wb, `tareas_${todayStr}.xlsx`);
+  toast('XLSX exportado ✓');
+}
+
+function download(content, filename, type) {
+  const a = document.createElement('a');
+  const blob = new Blob([content], {type});
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ── IMPORT ──────────────────────────────────────────────────────
+
+let importMode = 'merge';
+let pendingImport = null;
+
+function setImportMode(mode, el) {
+  importMode = mode;
+  document.querySelectorAll('.imode-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function triggerImport() { document.getElementById('file-input').click(); }
+function dragOver(e) { e.preventDefault(); document.getElementById('import-zone').classList.add('drag'); }
+function dragLeave() { document.getElementById('import-zone').classList.remove('drag'); }
+function dropFile(e) { e.preventDefault(); dragLeave(); const f = e.dataTransfer.files[0]; if (f) processFile(f); }
+
+function readFile(input) { if (input.files[0]) processFile(input.files[0]); }
+
+function processFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const reader = new FileReader();
+  if (ext === 'json') {
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        pendingImport = { type:'json', data };
+        showPreview(`JSON — ${(data.tasks||[]).length} tareas activas, ${(data.history||[]).length} en historia${data.notes?', notas incluidas':''}`);
+      } catch { toast('Error al leer el JSON'); }
+    };
+    reader.readAsText(file);
+  } else if (ext === 'csv') {
+    reader.onload = e => {
+      try {
+        const rows = parseCSV(e.target.result);
+        pendingImport = { type:'csv', rows };
+        showPreview(`CSV — ${rows.length} filas encontradas`);
+      } catch { toast('Error al leer el CSV'); }
+    };
+    reader.readAsText(file, 'UTF-8');
+  } else if (ext === 'xlsx') {
+    reader.onload = e => {
+      try {
+        if (!window.XLSX) { toast('Cargando librería XLSX...'); return; }
+        const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+        pendingImport = { type:'xlsx', rows };
+        showPreview(`XLSX — ${rows.length} filas en hoja "${wb.SheetNames[0]}"`);
+      } catch { toast('Error al leer el XLSX'); }
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    toast('Formato no soportado');
+  }
+}
+
+function showPreview(msg) {
+  const p = document.getElementById('import-preview');
+  p.style.display = 'block';
+  p.textContent = '✓ Archivo leído: ' + msg;
+  document.getElementById('btn-import-confirm').disabled = false;
+}
+
+function resetImportUI() {
+  pendingImport = null;
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('btn-import-confirm').disabled = true;
+  document.getElementById('file-input').value = '';
+}
+
+function confirmImport() {
+  if (!pendingImport) return;
+  const msg = importMode === 'replace' ? '¿Reemplazar TODOS los datos actuales? Esta acción no se puede deshacer.' : '¿Combinar los datos importados con los actuales?';
+  if (!confirm(msg)) return;
+
+  if (pendingImport.type === 'json') {
+    const d = pendingImport.data;
+    if (importMode === 'replace') {
+      tasks = d.tasks || [];
+      history = d.history || [];
+      if (d.notes !== undefined) { notesArea.value = d.notes; localStorage.setItem('ct_notes', d.notes); }
+    } else {
+      const existIds = new Set(tasks.map(t=>t.id));
+      (d.tasks||[]).forEach(t => { if (!existIds.has(t.id)) tasks.push(t); });
+      const existHIds = new Set(history.map(t=>t.id));
+      (d.history||[]).forEach(t => { if (!existHIds.has(t.id)) history.push(t); });
+    }
+  } else {
+    // CSV / XLSX: convertir filas a objetos tarea
+    const rows = pendingImport.rows;
+    const newTasks = [], newHist = [];
+    rows.forEach((r, i) => {
+      const t = rowToTask(r, i);
+      if (!t) return;
+      if (t._origen === 'Historia') newHist.push(t);
+      else newTasks.push(t);
+    });
+    if (importMode === 'replace') { tasks = newTasks; history = newHist; }
+    else {
+      const existIds = new Set(tasks.map(t=>t.id));
+      newTasks.forEach(t => { if (!existIds.has(t.id)) tasks.push(t); });
+      const existHIds = new Set(history.map(t=>t.id));
+      newHist.forEach(t => { if (!existHIds.has(t.id)) history.push(t); });
+    }
+  }
+
+  save(); renderAll(); closeBackup();
+  toast('Datos importados ✓');
+}
+
+function rowToTask(r, idx) {
+  // Soporta tanto cabeceras del export propio como columnas genéricas
+  const titulo = r['titulo'] || r['Titulo'] || r['TITULO'] || r['title'] || '';
+  if (!titulo) return null;
+  const prio = parseInt(r['prio'] || r['Prio'] || r['prioridad'] || 4) || 4;
+  return {
+    id: Date.now() + idx,
+    titulo,
+    desc: r['desc'] || r['descripcion'] || r['Descripcion'] || '',
+    tipo: r['tipo'] || r['Tipo'] || '',
+    cat: r['cat'] || r['categoria'] || r['Categoria'] || '',
+    prio,
+    fecha: r['fecha'] || r['Fecha'] || '',
+    done: (r['done']||r['Done']||'') === 'Si',
+    doneAt: r['doneAt'] || '',
+    archivedAt: r['archivedAt'] || '',
+    nota: r['nota'] || r['Nota'] || '',
+    creado: r['creado'] || todayStr,
+    _origen: r['origen'] || r['Origen'] || 'Hoy'
+  };
+}
+
+function parseCSV(text) {
+  // Quitar BOM
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = splitCSVRow(lines[0]);
+  return lines.slice(1).map(line => {
+    const vals = splitCSVRow(line);
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = vals[i] || '');
+    return obj;
+  });
+}
+
+function splitCSVRow(row) {
+  const result = []; let cur = ''; let inQ = false;
+  for (let i = 0; i < row.length; i++) {
+    const c = row[i];
+    if (c === '"') { if (inQ && row[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+    else if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+    else cur += c;
+  }
+  result.push(cur.trim());
+  return result;
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>
