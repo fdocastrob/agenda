@@ -12,7 +12,7 @@
     --bg: #0e0f12; --bg2: #16181d; --bg3: #1e2028;
     --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
     --text: #f0efe8; --text2: #9a9890; --text3: #5e5d58;
-    --accent: #d4a84b; --accent2: #b8922f;
+    --accent: #4a9d6f; --accent2: #3a845c;
     --blue: #4a8fd4; --green: #5ba668; --red: #d45a5a; --orange: #d4804a;
     --mono: 'DM Mono', monospace; --sans: 'Sora', sans-serif;
     --r: 8px; --r2: 12px;
@@ -53,7 +53,7 @@
   .destino-row { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
   .destino-btn { border:1px solid var(--border); border-radius:var(--r); padding:9px 6px; background:var(--bg3); color:var(--text2); cursor:pointer; font-family:var(--mono); font-size:11px; text-align:center; transition:all 0.15s; }
   .destino-btn:hover { border-color:var(--border2); color:var(--text); }
-  .destino-btn.active { border-color:var(--accent); background:rgba(212,168,75,0.12); color:var(--accent); font-weight:500; }
+  .destino-btn.active { border-color:var(--accent); background:rgba(74,157,111,0.12); color:var(--accent); font-weight:500; }
 
   .btn-add { width:100%; background:var(--accent); color:#0e0f12; border:none; border-radius:var(--r); padding:11px; font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer; transition:background 0.15s; letter-spacing:0.02em; }
   .btn-add:hover { background:var(--accent2); }
@@ -71,7 +71,7 @@
   .tab-btn:hover { color:var(--text); }
   .tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
   .tab-count { background:var(--bg3); border-radius:10px; padding:1px 7px; font-size:11px; font-family:var(--mono); color:var(--text3); }
-  .tab-btn.active .tab-count { background:rgba(212,168,75,0.15); color:var(--accent); }
+  .tab-btn.active .tab-count { background:rgba(74,157,111,0.15); color:var(--accent); }
 
   .search-bar { padding:14px 24px; border-bottom:1px solid var(--border); display:flex; gap:10px; align-items:center; background:var(--bg); }
   .search-wrap { position:relative; flex:1; }
@@ -92,7 +92,7 @@
   .task-card:hover { border-color:var(--border2); }
   .task-card.done { opacity:0.45; }
   .task-card.done .task-title { text-decoration:line-through; }
-  .task-card.selected { border-color:var(--accent) !important; background:rgba(212,168,75,0.04); }
+  .task-card.selected { border-color:var(--accent) !important; background:rgba(74,157,111,0.04); }
 
   .task-check { width:18px; height:18px; border:1.5px solid var(--border2); border-radius:5px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; transition:all 0.15s; background:transparent; color:transparent; font-size:11px; }
   .task-check:hover { border-color:var(--accent); }
@@ -109,7 +109,7 @@
   .badge-tipo { background:rgba(74,143,212,0.1); color:#6baae0; border:1px solid rgba(74,143,212,0.2); }
   .badge-cat { background:rgba(91,166,104,0.1); color:#7ecb8e; border:1px solid rgba(91,166,104,0.2); }
   .badge-date { background:var(--bg3); color:var(--text3); }
-  .badge-nota { background:rgba(212,168,75,0.08); color:var(--accent); border:1px solid rgba(212,168,75,0.2); cursor:pointer; }
+  .badge-nota { background:rgba(74,157,111,0.08); color:var(--accent); border:1px solid rgba(74,157,111,0.2); cursor:pointer; }
 
   .prio-dot { width:6px; height:6px; border-radius:50%; display:inline-block; flex-shrink:0; margin-top:6px; }
   .p1 { background:var(--red); } .p2 { background:var(--orange); } .p3 { background:var(--blue); } .p4 { background:var(--text3); }
@@ -122,7 +122,7 @@
   .act-btn.del:hover { border-color:var(--red); color:var(--red); }
   .act-btn.arch:hover { border-color:var(--accent); color:var(--accent); }
   .act-btn.edit-btn { font-size:11px; }
-  .act-btn.edit-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(212,168,75,0.08); }
+  .act-btn.edit-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(74,157,111,0.08); }
 
   /* PANEL DE EDICIÓN (drawer derecho) */
   .edit-panel {
@@ -197,12 +197,12 @@
   .backup-btn.xlsx:hover { border-color:var(--blue); }
   .backup-btn.json:hover { border-color:var(--orange); }
   .import-zone { border:1.5px dashed var(--border2); border-radius:var(--r2); padding:24px; text-align:center; cursor:pointer; transition:all 0.15s; }
-  .import-zone:hover, .import-zone.drag { border-color:var(--accent); background:rgba(212,168,75,0.05); }
+  .import-zone:hover, .import-zone.drag { border-color:var(--accent); background:rgba(74,157,111,0.05); }
   .import-zone p { font-size:13px; color:var(--text2); line-height:1.6; }
   .import-zone small { font-size:11px; font-family:var(--mono); color:var(--text3); }
   .import-mode-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
   .imode-btn { border:1px solid var(--border); border-radius:var(--r); padding:8px; background:var(--bg3); color:var(--text2); cursor:pointer; font-family:var(--mono); font-size:11px; text-align:center; transition:all 0.15s; }
-  .imode-btn.active { border-color:var(--accent); background:rgba(212,168,75,0.1); color:var(--accent); }
+  .imode-btn.active { border-color:var(--accent); background:rgba(74,157,111,0.1); color:var(--accent); }
   .btn-import-confirm { width:100%; background:var(--accent); color:#0e0f12; border:none; border-radius:var(--r); padding:10px; font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer; transition:background 0.15s; margin-top:4px; }
   .btn-import-confirm:hover { background:var(--accent2); }
   .btn-import-confirm:disabled { opacity:0.35; cursor:default; }
@@ -212,7 +212,7 @@
   /* SYNC STATUS */
   .sync-bar { display:flex; align-items:center; gap:8px; padding:5px 12px; background:var(--bg3); border:1px solid var(--border); border-radius:var(--r); font-size:11px; font-family:var(--mono); color:var(--text2); }
   .sync-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; transition:background 0.3s; }
-  .sync-dot.ok    { background:var(--green); box-shadow:0 0 5px var(--green); }
+  .sync-dot.ok    { background:var(--green); box-shadow:0 0 5px var(--accent); }
   .sync-dot.err   { background:var(--red); }
   .sync-dot.busy  { background:var(--accent); animation:sblink 0.8s infinite; }
   .sync-dot.off   { background:var(--text3); }
@@ -247,9 +247,89 @@
 
   .hdr-backup-btn { background:var(--bg3); border:1px solid var(--border); border-radius:var(--r); padding:6px 14px; font-size:12px; font-family:var(--mono); color:var(--text2); cursor:pointer; transition:all 0.15s; display:flex; align-items:center; gap:7px; }
   .hdr-backup-btn:hover { border-color:var(--border2); color:var(--text); }
+
+  /* ── LOGIN SCREEN ───────────────────────────── */
+  #login-screen {
+    position:fixed; inset:0; z-index:1000;
+    background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+  }
+  #login-screen.hidden { display:none; }
+  .login-box {
+    background:var(--bg2);
+    border:1px solid var(--border2);
+    border-radius:20px;
+    padding:40px 36px;
+    width:340px;
+    display:flex; flex-direction:column; align-items:center; gap:20px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+  }
+  .login-logo {
+    width:48px; height:48px;
+    background:var(--accent);
+    border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:20px; font-weight:700;
+    color:#0e0f12;
+  }
+  .login-title { font-size:18px; font-weight:600; letter-spacing:0.01em; }
+  .login-sub   { font-size:12px; color:var(--text2); font-family:var(--mono); margin-top:-12px; }
+  .login-field { width:100%; display:flex; flex-direction:column; gap:6px; }
+  .login-field label { font-size:11px; font-family:var(--mono); color:var(--text2); letter-spacing:0.06em; }
+  #login-pass {
+    width:100%; background:var(--bg3);
+    border:1px solid var(--border); border-radius:var(--r);
+    color:var(--text); font-family:var(--mono); font-size:14px;
+    padding:11px 14px; outline:none; transition:border-color .15s;
+    letter-spacing:0.08em;
+  }
+  #login-pass:focus { border-color:var(--accent); }
+  .btn-login {
+    width:100%; background:var(--accent); color:#0e0f12;
+    border:none; border-radius:var(--r);
+    padding:12px; font-family:var(--sans); font-size:14px;
+    font-weight:700; cursor:pointer; transition:background .15s;
+    letter-spacing:0.02em;
+  }
+  .btn-login:hover { background:var(--accent2); }
+  .login-error {
+    font-size:12px; font-family:var(--mono);
+    color:var(--red); text-align:center;
+    min-height:16px; transition:opacity .2s;
+  }
+  .login-error.hidden { opacity:0; }
+  /* shake animation on wrong password */
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-8px)}
+    40%{transform:translateX(8px)}
+    60%{transform:translateX(-5px)}
+    80%{transform:translateX(5px)}
+  }
+  .login-box.shake { animation:shake .4s ease; }
+
 </style>
 </head>
 <body>
+
+<!-- ── LOGIN SCREEN ─────────────────────────── -->
+<div id="login-screen">
+  <div class="login-box" id="login-box">
+    <div class="login-logo">CT</div>
+    <div style="text-align:center">
+      <div class="login-title">Control de Tareas</div>
+      <div class="login-sub">Acceso restringido</div>
+    </div>
+    <div class="login-field">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter')doLogin()" autofocus />
+    </div>
+    <div class="login-error hidden" id="login-error">Contraseña incorrecta</div>
+    <button class="btn-login" onclick="doLogin()">Ingresar</button>
+  </div>
+</div>
+
 
 <header>
   <div class="logo-mark">CT</div>
@@ -1321,6 +1401,44 @@ window.saveWithSync = function() {
     }
   };
 })();
+
+
+// ════════════════════════════════════════════
+//  AUTENTICACIÓN
+// ════════════════════════════════════════════
+
+// ── Cambia esta contraseña por la tuya ──────
+const APP_PASSWORD = "cdt2024";
+
+const SESSION_KEY = "ct_auth";
+
+function checkAuth() {
+  if (sessionStorage.getItem(SESSION_KEY) === "ok") {
+    document.getElementById('login-screen').classList.add('hidden');
+  }
+  // else: la pantalla de login ya es visible por defecto
+}
+
+function doLogin() {
+  const val = document.getElementById('login-pass').value;
+  if (val === APP_PASSWORD) {
+    sessionStorage.setItem(SESSION_KEY, "ok");
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('login-error').classList.add('hidden');
+  } else {
+    const box = document.getElementById('login-box');
+    const err = document.getElementById('login-error');
+    err.classList.remove('hidden');
+    // Shake animation
+    box.classList.remove('shake');
+    void box.offsetWidth; // reflow
+    box.classList.add('shake');
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+  }
+}
+
+checkAuth();
 
 initGSync();
 </script>
