@@ -9,6 +9,7 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
+    /* Dark theme (default) */
     --bg: #0e0f12; --bg2: #16181d; --bg3: #1e2028;
     --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
     --text: #f0efe8; --text2: #9a9890; --text3: #5e5d58;
@@ -17,6 +18,17 @@
     --mono: 'DM Mono', monospace; --sans: 'Sora', sans-serif;
     --r: 8px; --r2: 12px;
   }
+
+  /* Light theme */
+  :root.light {
+    --bg: #f4f5f7; --bg2: #ffffff; --bg3: #eaecf0;
+    --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.15);
+    --text: #1a1c21; --text2: #5a5d66; --text3: #9a9da8;
+    --accent: #3a845c; --accent2: #2d6b4a;
+    --blue: #3478c0; --green: #3a8a4e; --red: #c0453a; --orange: #c07030;
+  }
+
+  *, *::before, *::after { transition: background-color 0.2s, border-color 0.2s, color 0.15s; }
   body { background:var(--bg); color:var(--text); font-family:var(--sans); font-size:14px; min-height:100vh; display:flex; flex-direction:column; }
 
   header { padding:20px 28px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px; background:var(--bg2); }
@@ -46,8 +58,9 @@
   .prio-btn:hover { border-color:var(--border2); color:var(--text); }
   .prio-btn[data-p="1"].active { border-color:var(--red); background:rgba(212,90,90,0.12); color:var(--red); }
   .prio-btn[data-p="2"].active { border-color:var(--orange); background:rgba(212,128,74,0.12); color:var(--orange); }
-  .prio-btn[data-p="3"].active { border-color:var(--blue); background:rgba(74,143,212,0.12); color:var(--blue); }
+  .prio-btn[data-p="3"].active { border-color:var(--green); background:rgba(91,166,104,0.12); color:var(--green); }
   .prio-btn[data-p="4"].active { border-color:var(--text3); background:rgba(94,93,88,0.12); color:var(--text2); }
+  
 
   /* DESTINO TOGGLE */
   .destino-row { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
@@ -126,6 +139,26 @@
   }
   .timer-display.visible { display:block; }
   .task-card.done .timer-btn { opacity:0.3; pointer-events:none; }
+
+  /* ── PRIORITY TEXT BADGE ─────────────────── */
+  .badge-p1 { background:rgba(212,90,90,0.12);  color:#e07070; border:1px solid rgba(212,90,90,0.25); }
+  .badge-p2 { background:rgba(212,128,74,0.12); color:#e09060; border:1px solid rgba(212,128,74,0.25); }
+  .badge-p3 { background:rgba(91,166,104,0.12); color:#7ecb8e; border:1px solid rgba(91,166,104,0.25); }
+  .badge-p4 { background:rgba(94,93,88,0.10); color:#8a8980; border:1px solid rgba(94,93,88,0.2); }
+  
+
+  /* ── DATES INFO ROW ──────────────────────── */
+  .task-dates {
+    display:flex; flex-wrap:wrap; gap:10px;
+    margin-top:7px; padding-top:7px;
+    border-top:1px solid var(--border);
+    font-size:10px; font-family:var(--mono); color:var(--text3);
+    align-items:center;
+  }
+  .task-dates span { display:flex; align-items:center; gap:4px; }
+  .task-dates .dlabel { color:var(--text3); }
+  .task-dates .dval   { color:var(--text2); }
+  .task-dates .dval.done-val { color:var(--accent); }
   .badge-time {
     background:rgba(74,157,111,0.1); color:var(--accent);
     border:1px solid rgba(74,157,111,0.25);
@@ -148,7 +181,7 @@
   .badge-nota { background:rgba(74,157,111,0.08); color:var(--accent); border:1px solid rgba(74,157,111,0.2); cursor:pointer; }
 
   .prio-dot { width:6px; height:6px; border-radius:50%; display:inline-block; flex-shrink:0; margin-top:6px; }
-  .p1 { background:var(--red); } .p2 { background:var(--orange); } .p3 { background:var(--blue); } .p4 { background:var(--text3); }
+  .p1 { background:var(--red); } .p2 { background:var(--orange); } .p3 { background:var(--green); } .p4 { background:var(--text3); }
 
   .task-actions { display:flex; gap:4px; opacity:0; transition:opacity 0.15s; }
   .task-card:hover .task-actions { opacity:1; }
@@ -245,6 +278,17 @@
   .import-preview { background:var(--bg3); border-radius:var(--r); padding:10px 12px; font-size:11px; font-family:var(--mono); color:var(--text2); line-height:1.7; }
 
   /* HEADER backup btn */
+
+  /* ── THEME TOGGLE ───────────────────────── */
+  .theme-toggle {
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 20px; padding: 5px 12px 5px 8px;
+    font-size: 12px; font-family: var(--mono); color: var(--text2);
+    cursor: pointer; transition: all .15s;
+    display: flex; align-items: center; gap: 7px; white-space: nowrap;
+  }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  .theme-toggle .ttico { font-size: 14px; line-height: 1; }
   /* SYNC STATUS */
   .sync-bar { display:flex; align-items:center; gap:8px; padding:5px 12px; background:var(--bg3); border:1px solid var(--border); border-radius:var(--r); font-size:11px; font-family:var(--mono); color:var(--text2); }
   .sync-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; transition:background 0.3s; }
@@ -378,6 +422,7 @@
     <button class="sync-manual-btn" id="sync-manual-btn" onclick="syncToCloud()" title="Sincronizar ahora" style="display:none">↺</button>
   </div>
   <button class="hdr-google-btn" id="hdr-google-btn" onclick="openGConfig()">☁ Google Sheets</button>
+  <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">🌙 <span id="theme-label">Oscuro</span></button>
   <button class="hdr-backup-btn" onclick="openBackup()">⇅ Respaldo</button>
 </header>
 
@@ -424,10 +469,11 @@
       <div>
         <label>Prioridad</label>
         <div class="priority-grid">
-          <button class="prio-btn" data-p="1">🔴 1 — Urgente<br>+ Importante</button>
-          <button class="prio-btn" data-p="2">🟠 2 — Importante<br>+ No urgente</button>
-          <button class="prio-btn" data-p="3">🔵 3 — Urgente<br>+ No importante</button>
-          <button class="prio-btn" data-p="4">⚪ 4 — Ni urgente<br>ni importante</button>
+          <button class="prio-btn" data-p="1">🔴 P1<br>Alta</button>
+          <button class="prio-btn" data-p="2">🟡 P2<br>Media</button>
+          <button class="prio-btn" data-p="3">🟢 P3<br>Baja</button>
+          <button class="prio-btn" data-p="4">⚪ P4<br>Muy Baja</button>
+          
         </div>
       </div>
       <div>
@@ -464,10 +510,11 @@
         <input type="text" id="search-inp" placeholder="Buscar tarea..." oninput="renderAll()" />
       </div>
       <button class="filter-chip active" onclick="filterPrio(0,this)">Todos</button>
-      <button class="filter-chip" onclick="filterPrio(1,this)">P1</button>
-      <button class="filter-chip" onclick="filterPrio(2,this)">P2</button>
-      <button class="filter-chip" onclick="filterPrio(3,this)">P3</button>
-      <button class="filter-chip" onclick="filterPrio(4,this)">P4</button>
+      <button class="filter-chip" onclick="filterPrio(1,this)">🔴 Alta</button>
+      <button class="filter-chip" onclick="filterPrio(2,this)">🟡 Media</button>
+      <button class="filter-chip" onclick="filterPrio(3,this)">🟢 Baja</button>
+      <button class="filter-chip" onclick="filterPrio(4,this)">⚪ Muy Baja</button>
+      
     </div>
 
     <div class="stats-row">
@@ -552,10 +599,11 @@
             <div>
               <label>Prioridad</label>
               <div class="priority-grid" id="ep-prio-grid">
-                <button class="prio-btn" data-ep="1">🔴 1 — Urgente<br>+ Importante</button>
-                <button class="prio-btn" data-ep="2">🟠 2 — Importante<br>+ No urgente</button>
-                <button class="prio-btn" data-ep="3">🔵 3 — Urgente<br>+ No importante</button>
-                <button class="prio-btn" data-ep="4">⚪ 4 — Ni urgente<br>ni importante</button>
+                <button class="prio-btn" data-ep="1">🔴 P1<br>Alta</button>
+                <button class="prio-btn" data-ep="2">🟡 P2<br>Media</button>
+                <button class="prio-btn" data-ep="3">🟢 P3<br>Baja</button>
+                <button class="prio-btn" data-ep="4">⚪ P4<br>Muy Baja</button>
+                
               </div>
             </div>
             <div>
@@ -714,7 +762,7 @@
 </div>
 
 <script>
-const PRIO_LABEL = { 1:'1 — Urgente + Importante', 2:'2 — Importante + No urgente', 3:'3 — Urgente + No importante', 4:'4 — Ni urgente ni importante' };
+const PRIO_LABEL = { 1:'P1 — Alta', 2:'P2 — Media', 3:'P3 — Baja', 4:'P4 — Muy Baja' };
 const PRIO_CLASS = { 1:'p1', 2:'p2', 3:'p3', 4:'p4' };
 
 // ── CRONÓMETRO — declaraciones tempranas (usadas en makeCard) ────
@@ -767,6 +815,17 @@ function tickTimers() {
   });
 }
 
+
+function fmtDate(d) {
+  if (!d) return null;
+  // Accept YYYY-MM-DD
+  const parts = String(d).split('-');
+  if (parts.length === 3) {
+    const dt = new Date(parts[0], parts[1]-1, parts[2]);
+    return dt.toLocaleDateString('es-CL', {day:'2-digit', month:'short', year:'numeric'});
+  }
+  return d;
+}
 window.addEventListener('beforeunload', () => {
   const now = Date.now();
   let changed = false;
@@ -845,7 +904,7 @@ function addTask() {
     desc: document.getElementById('inp-desc').value.trim(),
     tipo: document.getElementById('inp-tipo').value,
     cat: document.getElementById('inp-cat').value,
-    prio: selectedPrio || 4,
+    prio: selectedPrio || 2,
     fecha,
     nota: document.getElementById('inp-nota').value.trim(),
     done: false,
@@ -997,12 +1056,16 @@ function makeCard(t, fromBacklog = false) {
       <div class="task-title">${escHtml(t.titulo)}</div>
       ${t.desc ? `<div class="task-desc">${escHtml(t.desc)}</div>` : ''}
       <div class="task-meta">
-        <span class="prio-dot ${prioClass}" title="${PRIO_LABEL[t.prio]||''}"></span>
+        ${t.prio ? `<span class="badge badge-p${t.prio}">${escHtml(PRIO_LABEL[t.prio]||'')}</span>` : ''}
         ${t.tipo ? `<span class="badge badge-tipo">${escHtml(t.tipo)}</span>` : ''}
         ${t.cat ? `<span class="badge badge-cat">${escHtml(t.cat)}</span>` : ''}
-        ${t.fecha ? `<span class="badge badge-date">${t.fecha}</span>` : ''}
         ${t.nota ? `<span class="badge badge-nota" onclick="openEditPanel(${t.id})">📝 nota</span>` : ''}
         ${elapsed > 0 && !isRunning ? `<span class="badge badge-time">⏱ ${fmtTime(elapsed)}</span>` : ''}
+      </div>
+      <div class="task-dates">
+        ${t.creado  ? `<span><span class="dlabel">Creada:</span><span class="dval">${fmtDate(t.creado)}</span></span>` : ''}
+        ${t.fecha   ? `<span><span class="dlabel">Vence:</span><span class="dval">${fmtDate(t.fecha)}</span></span>` : ''}
+        ${t.doneAt  ? `<span><span class="dlabel">Finalizada:</span><span class="dval done-val">${fmtDate(t.doneAt)}</span></span>` : ''}
       </div>
       ${notaPreview}
     </div>
@@ -1552,6 +1615,34 @@ function doLogin() {
 }
 
 checkAuth();
+
+
+// ════════════════════════════════════════════
+//  TEMA CLARO / OSCURO
+// ════════════════════════════════════════════
+(function initTheme() {
+  const saved = localStorage.getItem('ct_theme') || 'dark';
+  applyTheme(saved, false);
+})();
+
+function toggleTheme() {
+  const isLight = document.documentElement.classList.contains('light');
+  applyTheme(isLight ? 'dark' : 'light', true);
+}
+
+function applyTheme(theme, save) {
+  const root  = document.documentElement;
+  const btn   = document.getElementById('theme-toggle');
+  const label = document.getElementById('theme-label');
+  if (theme === 'light') {
+    root.classList.add('light');
+    if (btn)   btn.innerHTML = '☀ <span id="theme-label">Claro</span>';
+  } else {
+    root.classList.remove('light');
+    if (btn)   btn.innerHTML = '🌙 <span id="theme-label">Oscuro</span>';
+  }
+  if (save) localStorage.setItem('ct_theme', theme);
+}
 
 initGSync();
 </script>
